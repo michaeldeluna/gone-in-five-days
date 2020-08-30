@@ -4,7 +4,6 @@ module.exports = function () {
     };
 };
 
-
 /*
     Don't copy anything above this line to Google Apps Script. ====================
     Everything below here should be copied...
@@ -33,7 +32,6 @@ function findlabelledEmails(gmailApp, logger) {
         }
     }
 
-    logger.log(periods.length);
     logger.log(periods);
 
     for (x = 0; x < periods.length; x++) {

@@ -21,6 +21,7 @@
   "homepage": "https://github.com/patrickansari/gone-in-five-days#readme",
   "devDependencies": {
     "chai": "^4.2.0",
-    "mocha": "^8.1.1"
+    "mocha": "^8.1.1",
+    "sinon": "^9.0.3"
   }
 }
