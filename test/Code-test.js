@@ -53,14 +53,22 @@ const gone_in_days_5_messages = [
     deletedIn5,
     notDeletedIn5
 ];
+
 const gone_in_days_2_messages = [
     deletedIn2,
     notDeletedIn2
 ];
+
 const archive_in_days_1_messages = [
     archivedIn1,
     notArchivedIn1
 ];
+
+const all_labelled_msgs = {
+    "label:gone-in-days/5": gone_in_days_5_messages,
+    'label:gone-in-days/2': gone_in_days_2_messages,
+    'label:inbox label:archive-in-days/1': archive_in_days_1_messages
+}
 
 let gmail = {
     getUserLabels: function () {
@@ -73,21 +81,12 @@ let gmail = {
     },
 
     search: function (s) {
-        if (s === "label:gone-in-days/5") {
-            return gone_in_days_5_messages;
-        }
-        if (s === "label:gone-in-days/2") {
-            return gone_in_days_2_messages;
-        }
-        if (s === "label:archive-in-days/1") {
-            return archive_in_days_1_messages;
-        }
-        return [];
+        return s in all_labelled_msgs ? all_labelled_msgs[s] : [];
     }
 }
 
 let logger = {
-    log: console.log //function () {} // ignored for now
+    log: function () {} // ignored for now
 }
 
 
@@ -100,11 +99,10 @@ describe('Code.js tests', function () {
 
     it('uses hard coded objects', function () {
 
-        code.findEmails(gmail, logger);
+        code.findEmails(gmail, logger, now);
 
-        let labelledMessages = [gone_in_days_5_messages, gone_in_days_2_messages, archive_in_days_1_messages].flat();
         assert.equal(
-            describe(labelledMessages),
+            describe(),
             "gone-in-5 (days > 5) -> moveToTrash\n" +
             "gone-in-5 (days = 5)\n" +
             "gone-in-2 (days > 2) -> moveToTrash\n" +
@@ -114,11 +112,13 @@ describe('Code.js tests', function () {
         );
     });
 
-    function describe(messages) {
+    function describe() {
         let actual = '';
+        for (let v in all_labelled_msgs) {
+            let messages = all_labelled_msgs[v];
 
-        for (let i = 0; i < messages.length; i++) {
-            actual += messages[i].describe() + '\n';
+            for (let i = 0; i < messages.length; i++)
+                actual += messages[i].describe() + '\n';
         }
 
         return actual.trim();

@@ -1,6 +1,6 @@
 module.exports = function () {
-    this.findEmails = function (gmail, logger) {
-        findLabelledEmails(gmail, logger);
+    this.findEmails = function (gmail, logger, now) {
+        findLabelledEmails(gmail, logger, now);
     };
 };
 
@@ -11,83 +11,43 @@ module.exports = function () {
 
 const millisPerDay = 1000 * 60 * 60 * 24;
 
-function deleteOldEmails() {
-    findLabelledEmails(GmailApp, Logger)
-}
-
-function archiveOldEmails() {
-    findLabelledEmails(GmailApp, Logger)
-}
-
-function findLabelledEmails(gmailApp, logger) {
+function findLabelledEmails(gmailApp = GmailApp, logger = Logger, now = new Date()) {
     let labels = gmailApp.getUserLabels();
 
     for (let i = 0; i < labels.length; i++) {
 
         let label = labels[i].getName();
-        let period;
+        let theSlash = label.indexOf("/");
 
-        if (label.indexOf("gone-in-days") !== -1 && label.indexOf("/") !== -1) {
-
-            period = parseInt(label.substring(label.indexOf("/") + 1));
-
-            if (!isNaN(period))
-                deleteEmails(period, gmailApp, logger);
-        }
-
-        if (label.indexOf("archive-in-days") !== -1 && label.indexOf("/") !== -1) {
-
-            period = parseInt(label.substring(label.indexOf("/") + 1));
-
+        if (theSlash !== -1) {
+            let period = parseInt(label.substring(theSlash + 1));
             if (!isNaN(period)) {
-                archiveEmails(period, gmailApp, logger);
+                if (label.indexOf("gone-in-days") !== -1) {
+                    housekeeping(period, gmailApp, logger, now, "label:gone-in-days/", 'moveToTrash');
+                }
+
+                if (label.indexOf("archive-in-days") !== -1) {
+                    housekeeping(period, gmailApp, logger, now, "label:inbox label:archive-in-days/", 'moveToArchive');
+                }
             }
         }
     }
 }
 
-function deleteEmails(period, gmailApp, logger) {
-    let today = new Date();
-    let numberToDelete = 0;
-    let searchString = "label:gone-in-days/" + period.toString();
-    logger.log("searching=" + searchString);
+function housekeeping(period, gmailApp, logger, now, search, action) {
+    let total = 0;
+    let searchString = search + period.toString();
     let threads = gmailApp.search(searchString);
 
-    logger.log("today: " + today);
-    logger.log("labelled: " + threads.length);
-
     for (i = 0; i < threads.length; i++) {
-        let daysOld = Math.floor((today - threads[i].getMessages()[0].getDate()) / millisPerDay);
+        let daysOld = Math.floor((now - threads[i].getMessages()[0].getDate()) / millisPerDay);
 
         if (daysOld > period) {
             logger.log(threads[i].getFirstMessageSubject() + " days old: " + daysOld);
-            numberToDelete++;
-            threads[i].moveToTrash();
+            total++;
+            threads[i][action]();
         }
     }
 
-    logger.log("deleted: " + numberToDelete + " conversations");
-}
-
-function archiveEmails(period, gmailApp, logger) {
-    let today = new Date();
-    let numberToDelete = 0;
-    let searchString = "label:archive-in-days/" + period.toString();
-    logger.log("searching=" + searchString);
-    let threads = gmailApp.search(searchString);
-
-    logger.log("today: " + today);
-    logger.log("labelled: " + threads.length);
-
-    for (i = 0; i < threads.length; i++) {
-        let daysOld = Math.floor((today - threads[i].getMessages()[0].getDate()) / millisPerDay);
-
-        if (daysOld > period) {
-            logger.log(threads[i].getFirstMessageSubject() + " days old: " + daysOld);
-            numberToDelete++;
-            threads[i].moveToArchive();
-        }
-    }
-
-    logger.log("deleted: " + numberToDelete + " conversations");
+    logger.log('{'+searchString + '} ' + action + ': ' + total + ' of ' + threads.length + ' conversations');
 }
