@@ -1,6 +1,6 @@
 module.exports = function () {
     this.findEmails = function (gmail, logger) {
-        findlabelledEmails(gmail, logger);
+        findLabelledEmails(gmail, logger);
     };
 };
 
@@ -10,10 +10,13 @@ module.exports = function () {
  */
 
 function deleteOldEmails() {
-    findlabelledEmails(GmailApp, Logger)
+    findLabelledEmails(GmailApp, Logger)
+}
+function archiveOldEmails() {
+    findLabelledEmails(GmailApp, Logger)
 }
 
-function findlabelledEmails(gmailApp, logger) {
+function findLabelledEmails(gmailApp, logger) {
     var labels = gmailApp.getUserLabels();
     var periods = [];
 
