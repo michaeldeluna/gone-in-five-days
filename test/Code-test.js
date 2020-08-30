@@ -34,6 +34,9 @@ function user_thread(date, subject) {
         },
         moveToTrash: function () {
             this.result.push("moveToTrash");
+        },
+        moveToArchive: function () {
+            this.result.push("moveToArchive");
         }
     };
 }
@@ -42,8 +45,8 @@ const deletedIn5 = user_thread(Math.floor(now - (7 * millisPerDay)), "gone-in-5 
 const notDeletedIn5 = user_thread(Math.floor(now - (5 * millisPerDay)), "gone-in-5 (days = 5)");
 const deletedIn2 = user_thread(Math.floor(now - (3 * millisPerDay)), "gone-in-2 (days > 2)");
 const notDeletedIn2 = user_thread(Math.floor(now - (2 * millisPerDay)), "gone-in-2 (days = 2)");
-const archivedIn1 = user_thread(Math.floor(now - (1 * millisPerDay)), "archive-in-1 (days > 1)");
-const notArchivedIn1 = user_thread(Math.floor(now), "archive-in-1 (days = 0)");
+const archivedIn1 = user_thread(Math.floor(now - (2 * millisPerDay)), "archive-in-1 (days > 1)");
+const notArchivedIn1 = user_thread(Math.floor(now - (1 * millisPerDay)), "archive-in-1 (days = 0)");
 
 
 const gone_in_days_5_messages = [
@@ -63,7 +66,9 @@ let gmail = {
     getUserLabels: function () {
         return [
             user_label("gone-in-days/5"),
-            user_label("gone-in-days/2")
+            user_label("gone-in-days/2"),
+            user_label("archive-in-days/2"),
+            user_label("archive-in-days/1")
         ];
     },
 
@@ -82,7 +87,7 @@ let gmail = {
 }
 
 let logger = {
-    log: function () {} // ignored for now
+    log: console.log //function () {} // ignored for now
 }
 
 
@@ -97,13 +102,15 @@ describe('Code.js tests', function () {
 
         code.findEmails(gmail, logger);
 
-        let labelledMessages = [gone_in_days_5_messages, gone_in_days_2_messages].flat();
+        let labelledMessages = [gone_in_days_5_messages, gone_in_days_2_messages, archive_in_days_1_messages].flat();
         assert.equal(
             describe(labelledMessages),
             "gone-in-5 (days > 5) -> moveToTrash\n" +
             "gone-in-5 (days = 5)\n" +
             "gone-in-2 (days > 2) -> moveToTrash\n" +
-            "gone-in-2 (days = 2)"
+            "gone-in-2 (days = 2)\n" +
+            "archive-in-1 (days > 1) -> moveToArchive\n" +
+            "archive-in-1 (days = 0)"
         );
     });
 
@@ -116,5 +123,4 @@ describe('Code.js tests', function () {
 
         return actual.trim();
     }
-
 });
